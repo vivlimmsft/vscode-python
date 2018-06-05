@@ -32,7 +32,6 @@ def main(tpn_path, *, npm=None, pypi=None):
                     licenses[name] = known_details
                     del npm_projects[name]
         # XXX Download npm package for the project.
-        # XXX Extract project name and version.
         # XXX ! Warn if license is copyleft.
         # XXX Read license file for project.
     if pypi:
