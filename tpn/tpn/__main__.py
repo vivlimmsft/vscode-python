@@ -24,7 +24,6 @@ def main(tpn_path, *, npm=None, pypi=None):
     if npm:
         with open(npm) as file:
             package_data = json.load(file)
-        # XXX Get list of dependencies from package-lock.json.
         npm_projects = npmtools.projects(package_data)
         for name, details in list(npm_projects.items()):
             if name in known_licenses:
