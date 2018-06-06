@@ -51,3 +51,22 @@ def test_projects():
     assert packages["arch"] == {"version": "2.1.0", "url": "https://registry.npmjs.org/arch/-/arch-2.1.0.tgz"}
     assert "applicationinsights" in packages
     assert packages["applicationinsights"] == {"version": "1.0.1", "url": "https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz"}
+
+
+def test_fetch():
+    # A one-liner module equating to 1.5KB of data.
+    tarball_url = "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz"
+    with npm.fetch(tarball_url) as tarball:
+        assert tarball.getmember("package/license")
+        with tarball.extractfile("package/license") as file:
+            assert "MIT" in file.read().decode("utf-8")
+
+
+def test_package_filenames():
+    # XXX
+    pass
+
+
+def test_find_license():
+    # XXX
+    pass

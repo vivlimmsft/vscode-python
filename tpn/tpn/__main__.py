@@ -31,9 +31,10 @@ def main(tpn_path, *, npm=None, pypi=None):
                 if details["version"] == known_details["version"]:
                     licenses[name] = known_details
                     del npm_projects[name]
-        # XXX Download npm package for the project.
-        # XXX ! Warn if license is copyleft.
-        # XXX Read license file for project.
+        for name, details in npm_projects:
+            # XXX Make async with miniasync
+            details["license"] = npmtools.fetch_license(details["url"])
+            # XXX ! warn if copyleft
     if pypi:
         # XXX ! Repeat above for PyPI.
         pass
