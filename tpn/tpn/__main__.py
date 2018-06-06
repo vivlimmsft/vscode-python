@@ -14,6 +14,7 @@ import docopt
 from . import manual
 from . import npm as npmtools
 
+
 def main(tpn_path, *, npm=None, pypi=None):
     tpn_path = pathlib.Path(tpn_path)
     licenses = {}
