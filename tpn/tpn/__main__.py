@@ -33,7 +33,6 @@ def main(tpn_path, *, npm=None, pypi=None):
                     licenses[name] = known_details
                     del npm_projects[name]
         for name, details in npm_projects:
-            # XXX Make async with miniasync
             details["license"] = npmtools.fetch_license(details["url"])
             # XXX ! warn if copyleft
     if pypi:
