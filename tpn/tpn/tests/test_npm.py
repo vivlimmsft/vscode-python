@@ -55,18 +55,30 @@ def test_projects():
     }
 
 
-def test_fetch():
-    # A one-liner module equating to 1.5KB of data.
-    tarball_url = "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz"
-    with npm.fetch(tarball_url) as tarball:
-        assert tarball.getmember("package/license")
-        with tarball.extractfile("package/license") as file:
-            assert "MIT" in file.read().decode("utf-8")
-
-
 def test_package_filenames():
-    # XXX
-    pass
+    example = [
+        "package/package.json",
+        "package/index.js",
+        "package/license",
+        "package/readme.md",
+        "package/code/stuff.js",
+        "i_do_not_know.txt",
+    ]
+    package_filenames = npm.package_filenames(example)
+    assert package_filenames == {
+        "package.json",
+        "index.js",
+        "license",
+        "readme.md",
+        "code/stuff.js",
+    }
+
+
+def test_find_license():
+    example = {"package.json", "index.js", "license", "readme.md", "code/stuff.js"}
+    assert "license" == npm.find_license(example)
+    with pytest.raises(ValueError):
+        npm.find_license([])
 
 
 def test_find_license():

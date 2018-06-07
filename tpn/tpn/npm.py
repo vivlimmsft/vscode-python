@@ -26,14 +26,26 @@ def fetch(tarball_url):
     return tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content))
 
 
-def package_filenames(tarball):
-    """Return the container of files contained in the npm package."""
-    # XXX
+def package_filenames(tarball_paths):
+    """Transform the iterable of npm tarball paths to the files contained within the package."""
+    paths = []
+    for path in tarball_paths:
+        parts = pathlib.PurePath(path).parts
+        if parts[0] == "package":
+            paths.append("/".join(parts[1:]))
+    return frozenset(paths)
+
+
+LICENSE_FILENAMES = frozenset({"license", "license.txt"})
 
 
 def find_license(filenames):
     """Find the file name for the license file."""
-    # XXX
+    for filename in filenames:
+        if filename.lower() in LICENSE_FILENAMES:
+            return filename
+    else:
+        raise ValueError("no license file found")
 
 
 def fetch_license(tarball_url):
