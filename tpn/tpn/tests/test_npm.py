@@ -1,3 +1,5 @@
+import pytest
+
 from .. import npm
 
 
@@ -81,6 +83,6 @@ def test_find_license():
         npm.find_license([])
 
 
-def test_find_license():
+def test_fetch_license():
     # XXX
     pass
