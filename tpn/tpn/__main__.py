@@ -34,6 +34,7 @@ def main(tpn_path, *, npm=None, pypi=None):
                     del npm_projects[name]
         for name, details in npm_projects:
             details["license"] = npmtools.fetch_license(details["url"])
+            # XXX fill_in_licenses() could be made concurrent
             # XXX ! warn if copyleft
     if pypi:
         # XXX ! Repeat above for PyPI.

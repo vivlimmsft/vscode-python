@@ -21,12 +21,6 @@ def projects(package_data):
     return packages
 
 
-def fetch(tarball_url):
-    """Download an npm tarball and return a tarfile.Tarfile instance."""
-    url_request = requests.get(tarball_url)
-    return tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content))
-
-
 def package_filenames(tarball_paths):
     """Transform the iterable of npm tarball paths to the files contained within the package."""
     paths = []
@@ -51,8 +45,9 @@ def find_license(filenames):
 
 def fetch_license(tarball_url):
     """Download and extract the license file."""
-    with fetch(tarball_url) as tarball:
-        filenames = package_filenames(tarball)
+    url_request = requests.get(tarball_url)
+    with tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content)) as tarball:
+        filenames = package_filenames(tarball.getnames())
         license_filename = find_license(filenames)
         with tarball.extractfile(f"package/{license_filename}") as file:
             return file.read().decode("utf-8")
