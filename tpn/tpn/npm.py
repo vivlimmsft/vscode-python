@@ -1,4 +1,5 @@
 import io
+import pathlib
 import tarfile
 
 import requests
