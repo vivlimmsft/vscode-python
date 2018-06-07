@@ -1,6 +1,6 @@
 """Third-party notices generation.
 
-Usage: tpn [--npm=<package-lock.json>] [--pypi=<requirements.txt>] <tpn_path>
+Usage: tpn [--npm=<package-lock.json>] [--pypi=<requirements.txt>] --config=<TPN.toml> <tpn_path>
 
 Options:
     --npm=<package-lock.json>   Path to a package-lock.json file for npm.
@@ -10,28 +10,31 @@ Options:
 import pathlib
 
 import docopt
+import toml
 
 from . import manual
 from . import npm
 
 
-def main(tpn_path, *, npm_path=None, pypi_path=None):
+def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
-    licenses = {}
+    projects = {}
+    config_path = pathlib.Path(config_path)
+    config = toml.loads(config_path.read_text(encoding="utf-8"))
     if tpn_path.exists():
-        known_licenses = manual.parse_license(tpn_path.read_text())
+        known_projects = manual.parse_license(tpn_path.read_text())
     else:
-        known_licenses = {}
+        known_projects = {}
     # XXX manually-specified licenses
     if npm_path:
         with open(npm_path) as file:
             package_data = json.load(file)
         npm_projects = npm.projects(package_data)
         for name, details in list(npm_projects.items()):
-            if name in known_licenses:
-                known_details = known_licenses[name]
+            if name in known_projects:
+                known_details = known_projects[name]
                 if details["version"] == known_details["version"]:
-                    licenses[name] = known_details
+                    projects[name] = known_details
                     del npm_projects[name]
         for name, details in npm_projects:
             details["license"] = npm.fetch_license(details["url"])
@@ -40,9 +43,15 @@ def main(tpn_path, *, npm_path=None, pypi_path=None):
     if pypi_path:
         # XXX ! Repeat above for PyPI.
         pass
-    # XXX Generate TPN.
+    with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
+        file.write(manual.generate_tpn(config, licenses))
 
 
 if __name__ == "__main__":
     arguments = docopt.docopt(__doc__)
-    main(arguments["<tpn_path>"], npm_path=arguments["--npm"], pypi_path=arguments["--pypi"])
+    main(
+        arguments["<tpn_path>"],
+        config_path=arguments["--config"],
+        npm_path=arguments["--npm"],
+        pypi_path=arguments["--pypi"],
+    )
