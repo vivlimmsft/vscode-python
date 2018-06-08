@@ -9,12 +9,20 @@ TPN_SECTION_RE = re.compile(
 )
 
 
+def projects_from_config(config):
+    """Pull out projects as specified manually in a config file."""
+    projects = {}
+    for project in config["project"]:
+        projects[project["name"]] = project
+    return projects
+
+
 def parse_tpn(text):
     """Break the TPN text up into individual project details."""
     licenses = {}
     for match in TPN_SECTION_RE.finditer(text):
         details = match.groupdict()
-        name = details.pop("name")
+        name = details["name"]
         licenses[name] = details
     return licenses
 
@@ -23,6 +31,7 @@ def generate_tpn(config, projects):
     """Create the TPN text."""
     parts = [config["metadata"]["header"]]
     project_names = sorted(projects.keys())
+    print(project_names)
     toc = []
     index_padding = len(f"{len(project_names)}.")
     for index, name in enumerate(project_names, 1):
@@ -32,7 +41,8 @@ def generate_tpn(config, projects):
         )
     parts.append("\n".join(toc))
     licenses = []
-    for name, details in projects.items():
-        licenses.append(TPN_SECTION_TEMPLATE.format(name=name, **details))
+    for name in project_names:
+        details = projects[name]
+        licenses.append(TPN_SECTION_TEMPLATE.format(**details))
     parts.append("\n\n".join(licenses))
     return "\n\n\n".join(parts) + "\n"

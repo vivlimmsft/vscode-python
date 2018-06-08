@@ -1,5 +1,19 @@
 from .. import manual
 
+PROJECT_DATA = {
+    "Arch": {
+        "name": "Arch",
+        "version": "1.0.3",
+        "license": "Some license.\n\nHopefully it's a nice one.",
+        "url": "https://someplace.com/on/the/internet",
+    },
+    "Python programming language": {
+        "name": "Python programming language",
+        "version": "3.6.5",
+        "license": "The PSF license.\n\nIt\nis\nvery\nlong!",
+        "url": "https://python.org",
+    },
+}
 
 EXAMPLE = """A header!
 
@@ -31,6 +45,13 @@ END OF Python programming language NOTICES AND INFORMATION
 """
 
 
+def test_projects_from_config():
+    assert (
+        manual.projects_from_config({"project": list(PROJECT_DATA.values())})
+        == PROJECT_DATA
+    )
+
+
 def test_parse_tpn():
     licenses = manual.parse_tpn(EXAMPLE)
     assert "Arch" in licenses
@@ -49,17 +70,5 @@ def test_parse_tpn():
 
 def test_generate_tpn():
     settings = {"metadata": {"header": "A header!\n\nWith legal stuff!"}}
-    projects = {
-        "Arch": {
-            "version": "1.0.3",
-            "license": "Some license.\n\nHopefully it's a nice one.",
-            "url": "https://someplace.com/on/the/internet",
-        },
-        "Python programming language": {
-            "version": "3.6.5",
-            "license": "The PSF license.\n\nIt\nis\nvery\nlong!",
-            "url": "https://python.org",
-        },
-    }
 
-    assert manual.generate_tpn(settings, projects) == EXAMPLE
+    assert manual.generate_tpn(settings, PROJECT_DATA) == EXAMPLE
