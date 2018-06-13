@@ -1,10 +1,9 @@
 """Third-party notices generation.
 
-Usage: tpn [--npm=<package.json> --npm-lock=<package-lock.json>] [--pypi=<requirements.txt>] --config=<TPN.toml> <tpn_path>
+Usage: tpn [--npm=<package-lock.json>] [--pypi=<requirements.txt>] --config=<TPN.toml> <tpn_path>
 
 Options:
-    --npm=<package.json>            Path to a package.json for node.
-    --npm-lock=<package-lock.json>  Path to a package-lock.json file for npm.
+    --npm=<package.json>            Path to a package-lock.json for node.
     --pypi=<requirements.txt>       Path to a requirements.txt file for pip.
 
 """
@@ -18,28 +17,33 @@ from . import manual
 from . import npm
 
 
-def main(tpn_path, *, config_path, npm_path=None, npm_lock_path=None, pypi_path=None):
+def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
     config = toml.loads(config_path.read_text(encoding="utf-8"))
     projects = manual.projects_from_config(config)
-    for project in projects.values():
-        print(project["name"], project["version"], ":", config_path)
     if tpn_path.exists():
-        known_projects = manual.parse_tpn(tpn_path.read_text())
+        known_projects = manual.parse_tpn(tpn_path.read_text(encoding="utf-8"))
     else:
         known_projects = {}
-    # XXX manually-specified licenses
-    if npm_path and npm_lock_path:
-        with open(npm_path) as file:
+    if npm_path:
+        with open(npm_path, encoding="utf-8") as file:
             package_data = json.load(file)
-        with open(npm_lock_path) as file:
-            package_lock_data = json.load(file)
-        npm_projects = npm.projects(package_data, package_lock_data)
+        npm_projects = npm.projects(package_data)
         for name, details in list(npm_projects.items()):
+            details_version = details["version"]
             if name in projects:
-                if details["version"] == projects[name]["version"]:
+                projects_version = projects[name]["version"]
+                if details_version == projects_version:
                     del npm_projects[name]
+                    print(name, details_version, ":", config_path)
+                else:
+                    del project[name]
+                    print(
+                        name,
+                        f"is outdated in {config_path}",
+                        f"({projects_version} != {details_version}",
+                    )
             elif name in known_projects:
                 known_details = known_projects[name]
                 if details["version"] == known_details["version"]:
@@ -60,12 +64,10 @@ def main(tpn_path, *, config_path, npm_path=None, npm_lock_path=None, pypi_path=
 
 
 if __name__ == "__main__":
-    print("Running ...")
     arguments = docopt.docopt(__doc__)
     main(
         arguments["<tpn_path>"],
         config_path=arguments["--config"],
         npm_path=arguments["--npm"],
-        npm_lock_path=arguments["--npm-lock"],
         pypi_path=arguments["--pypi"],
     )

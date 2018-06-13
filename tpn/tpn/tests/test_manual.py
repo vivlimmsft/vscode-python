@@ -55,17 +55,12 @@ def test_projects_from_config():
 def test_parse_tpn():
     licenses = manual.parse_tpn(EXAMPLE)
     assert "Arch" in licenses
-    assert licenses["Arch"] == {
-        "version": "1.0.3",
-        "url": "https://someplace.com/on/the/internet",
-        "license": "Some license.\n\nHopefully it's a nice one.\n",
-    }
+    assert licenses["Arch"] == PROJECT_DATA["Arch"]
     assert "Python programming language" in licenses
-    assert licenses["Python programming language"] == {
-        "version": "3.6.5",
-        "url": "https://python.org",
-        "license": "The PSF license.\n\nIt\nis\nvery\nlong!\n",
-    }
+    assert (
+        licenses["Python programming language"]
+        == PROJECT_DATA["Python programming language"]
+    )
 
 
 def test_generate_tpn():

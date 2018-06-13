@@ -5,18 +5,17 @@ import tarfile
 import requests
 
 
-def projects(package_data, package_lock_data):
+def projects(package_data):
     """Retrieve the list of projects from the package data.
 
-    'package_data' is assumed to be from a 'package.json' file while
-    'package_lock_data' is assumed to come from a `package-lock.json` file. The
-    projects returned only consist of the top-level dependencies listed in the
-    data that are not development dependencies.
+    'package_data' is assumed to be from a 'package-lock.json' file. All
+    dev-related dependencies are ignored.
 
     """
     packages = {}
-    for name in package_data["dependencies"].keys():
-        details = package_lock_data["dependencies"][name]
+    for name, details in package_data["dependencies"].items():
+        if details.get("dev", False):
+            continue
         packages[name] = {
             "name": name,
             "version": details["version"],
@@ -36,7 +35,15 @@ def package_filenames(tarball_paths):
 
 
 LICENSE_FILENAMES = frozenset(
-    x.lower() for x in ("license", "license.txt", "license.md", "LICENSE-MIT")
+    x.lower()
+    for x in (
+        "license",
+        "license.md",
+        "license.mkd",
+        "license.txt",
+        "LICENSE-MIT",
+        "LICENSE-MIT.txt",
+    )
 )
 
 

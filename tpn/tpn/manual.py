@@ -4,7 +4,7 @@ import re
 
 TPN_SECTION_TEMPLATE = "%% {name} {version} NOTICES AND INFORMATION BEGIN HERE ({url})\n=========================================\n{license}\n=========================================\nEND OF {name} NOTICES AND INFORMATION"
 TPN_SECTION_RE = re.compile(
-    r"%% (?P<name>.+?) (?P<version>\S+) NOTICES AND INFORMATION BEGIN HERE \((?P<url>http.+?)\)\n=========================================\n(?P<license>.+?)=========================================\nEND OF (?P=name) NOTICES AND INFORMATION",
+    r"%% (?P<name>.+?) (?P<version>\S+) NOTICES AND INFORMATION BEGIN HERE \((?P<url>http.+?)\)\n=========================================\n(?P<license>.+?)\n=========================================\nEND OF (?P=name) NOTICES AND INFORMATION",
     re.DOTALL,
 )
 
@@ -31,7 +31,6 @@ def generate_tpn(config, projects):
     """Create the TPN text."""
     parts = [config["metadata"]["header"]]
     project_names = sorted(projects.keys())
-    print(project_names)
     toc = []
     index_padding = len(f"{len(project_names)}.")
     for index, name in enumerate(project_names, 1):

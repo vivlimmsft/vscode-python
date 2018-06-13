@@ -4,7 +4,6 @@ from .. import npm
 
 
 def test_projects():
-    test_data = {"dependencies": {"applicationinsights": "^1.0.1", "arch": "2.1.0"}}
     test_lock_data = {
         "dependencies": {
             "append-buffer": {
@@ -44,7 +43,7 @@ def test_projects():
             },
         }
     }
-    packages = npm.projects(test_data, test_lock_data)
+    packages = npm.projects(test_lock_data)
     assert len(packages) == 2
     assert "arch" in packages
     assert packages["arch"] == {
