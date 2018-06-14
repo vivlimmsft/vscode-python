@@ -1,3 +1,4 @@
+from concurrent import futures
 import io
 import json
 import pathlib
@@ -83,9 +84,11 @@ def fill_in_licenses(requested_projects):
     Any failures in the searching for licenses are returned.
 
     """
-    # XXX Make concurrent
-    for name, details in requested_projects.items():
-        url = details["url"]
-        print(f"{name} {details['version']}: {url}")
-        details["license"] = _fetch_license(url)
+    names = list(requested_projects.keys())
+    urls = (requested_projects[name]["url"] for name in names)
+    licenses = futures.ThreadPoolExecutor.map(_fetch_license, urls)
+    for name, license in zip(names, urls):
+        details = requested_projects[name]
+        details["license"] = license
+        print(f"{name} {details['version']}: {details['url']}")
     return {}  # XXX Failures
