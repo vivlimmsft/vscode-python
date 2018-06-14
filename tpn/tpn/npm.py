@@ -31,13 +31,13 @@ def projects_from_data(raw_data):
     return _projects(json_data)
 
 
-def _package_filenames(tarball_paths):
-    """Transform the iterable of npm tarball paths to the files contained within the package."""
+def _top_level_package_filenames(tarball_paths):
+    """Transform the iterable of npm tarball paths to the top-level files contained within the package."""
     paths = []
     for path in tarball_paths:
         parts = pathlib.PurePath(path).parts
-        if parts[0] == "package":
-            paths.append("/".join(parts[1:]))
+        if parts[0] == "package" and len(parts) == 2:
+            paths.append(parts[1])
     return frozenset(paths)
 
 
@@ -71,7 +71,7 @@ def _fetch_license(tarball_url):
     """Download and extract the license file."""
     url_request = requests.get(tarball_url)
     with tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content)) as tarball:
-        filenames = _package_filenames(tarball.getnames())
+        filenames = _top_level_package_filenames(tarball.getnames())
         license_filename = _find_license(filenames)
         with tarball.extractfile(f"package/{license_filename}") as file:
             return file.read().decode("utf-8")

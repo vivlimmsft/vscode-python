@@ -61,7 +61,7 @@ def test_projects():
     }
 
 
-def test_package_filenames():
+def test_top_level_package_filenames():
     example = [
         "package/package.json",
         "package/index.js",
@@ -70,14 +70,8 @@ def test_package_filenames():
         "package/code/stuff.js",
         "i_do_not_know.txt",
     ]
-    package_filenames = npm._package_filenames(example)
-    assert package_filenames == {
-        "package.json",
-        "index.js",
-        "license",
-        "readme.md",
-        "code/stuff.js",
-    }
+    package_filenames = npm._top_level_package_filenames(example)
+    assert package_filenames == {"package.json", "index.js", "license", "readme.md"}
 
 
 def test_find_license():
