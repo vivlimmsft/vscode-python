@@ -10,6 +10,7 @@ The Microsoft Python extension for Visual Studio Code incorporates components fr
 name = "assert-plus"
 version = "1.0.0"
 url = "https://github.com/joyent/node-assert-plus/tree/v1.0.0"
+purpose = "npm"
 license = """
 The MIT License (MIT)
 Copyright (c) 2012 Mark Cavage
@@ -37,6 +38,7 @@ SOFTWARE.
 name = "bcrypt-pbkdf"
 version = "1.0.1"
 url = "https://www.npmjs.com/package/bcrypt-pbkdf"
+purpose = "npm"
 license = """
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -53,6 +55,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 name = "json-schema"
 version = "0.2.3"
 url = "https://www.npmjs.com/package/json-schema"  # References the Dojo Foundation's license: https://github.com/dojo/meta
+purpose = "npm"
 license = """
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -69,6 +72,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 name = "node-stream-zip"
 version = "1.6.0"
 url = "https://github.com/antelle/node-stream-zip/tree/1.6.0"
+purpose = "npm"
 license = """
 Copyright (c) 2015 Antelle https://github.com/antelle
 
@@ -120,6 +124,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 name = "throttleit"
 version = "1.0.0"
 url = "https://github.com/component/throttle/tree/1.0.0"
+purpose = "npm"
 license = """
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -132,6 +137,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 name = "tree-kill"
 version = "1.2.0"
 url = "https://github.com/pkrumins/node-tree-kill"
+purpose = "npm"
 license = """
 MIT License
 
@@ -160,6 +166,7 @@ SOFTWARE.
 name = "typescript-char"
 version = "0.0.0"
 url = "https://github.com/mason-lang/typescript-char"
+purpose = "npm"
 license = "http://unlicense.org/UNLICENSE"
 
 
@@ -167,6 +174,7 @@ license = "http://unlicense.org/UNLICENSE"
 name = "winreg"
 version = "1.2.4"
 url = "https://github.com/fresc81/node-winreg/tree/v1.2.4"
+purpose = "npm"
 license = """
 This project is released under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause).
 

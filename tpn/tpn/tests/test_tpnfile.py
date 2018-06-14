@@ -1,4 +1,9 @@
-from .. import manual
+import pytest
+
+import copy
+
+from .. import tpnfile
+
 
 PROJECT_DATA = {
     "Arch": {
@@ -45,15 +50,8 @@ END OF Python programming language NOTICES AND INFORMATION
 """
 
 
-def test_projects_from_config():
-    assert (
-        manual.projects_from_config({"project": list(PROJECT_DATA.values())})
-        == PROJECT_DATA
-    )
-
-
 def test_parse_tpn():
-    licenses = manual.parse_tpn(EXAMPLE)
+    licenses = tpnfile.parse_tpn(EXAMPLE)
     assert "Arch" in licenses
     assert licenses["Arch"] == PROJECT_DATA["Arch"]
     assert "Python programming language" in licenses
@@ -66,4 +64,4 @@ def test_parse_tpn():
 def test_generate_tpn():
     settings = {"metadata": {"header": "A header!\n\nWith legal stuff!"}}
 
-    assert manual.generate_tpn(settings, PROJECT_DATA) == EXAMPLE
+    assert tpnfile.generate_tpn(settings, PROJECT_DATA) == EXAMPLE

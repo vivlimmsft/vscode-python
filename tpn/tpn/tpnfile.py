@@ -9,14 +9,6 @@ TPN_SECTION_RE = re.compile(
 )
 
 
-def projects_from_config(config):
-    """Pull out projects as specified manually in a config file."""
-    projects = {}
-    for project in config["project"]:
-        projects[project["name"]] = project
-    return projects
-
-
 def parse_tpn(text):
     """Break the TPN text up into individual project details."""
     licenses = {}

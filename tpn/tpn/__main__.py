@@ -13,23 +13,37 @@ import pathlib
 import docopt
 import pytoml as toml
 
-from . import manual
+from . import config
+from . import tpnfile
 from . import npm
+
+# XXX Support teams that have e.g. 501 NPM entries
+# XXX Cached projects from TPN
+# XXX Manually-entered project from configuration file
+# XXX Generalize so that supporting a new index is simply implementing a module:
+# XXX   Needed projects from index
+# XXX   If there's an entry in the configuration file, use it
+# XXX   Warn about stale entries for the index in the configuration file
+# XXX   If there's an entry from the cache, use it
+# XXX   Get license from index (and record any failure)
+# XXX   Warn about any failures
+# XXX Generate TPN (if no failures)
 
 
 def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
     config = toml.loads(config_path.read_text(encoding="utf-8"))
-    projects = manual.projects_from_config(config)
+    projects = config.get_projects(config)
     if tpn_path.exists():
-        known_projects = manual.parse_tpn(tpn_path.read_text(encoding="utf-8"))
+        known_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))
     else:
         known_projects = {}
     if npm_path:
         with open(npm_path, encoding="utf-8") as file:
             package_data = json.load(file)
         npm_projects = npm.projects(package_data)
+        # XXX Factor out
         for name, details in list(npm_projects.items()):
             details_version = details["version"]
             if name in projects:
@@ -59,8 +73,9 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     if pypi_path:
         # XXX ! Repeat above for PyPI.
         pass
+    # XXX Check for stale config entries
     with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
-        file.write(manual.generate_tpn(config, projects))
+        file.write(tpnfile.generate_tpn(config, projects))
 
 
 if __name__ == "__main__":
