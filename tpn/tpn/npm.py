@@ -34,6 +34,10 @@ def package_filenames(tarball_paths):
     return frozenset(paths)
 
 
+# While ``name.lower().startswith("license")`` would works in all of the cases
+# below, it is better to err on the side of being conservative and be explicit
+# rather than just assume that there won't be an e.g. LICENCE_PLATES or LICENSEE
+# file which isn't an actual license.
 LICENSE_FILENAMES = frozenset(
     x.lower()
     for x in (
