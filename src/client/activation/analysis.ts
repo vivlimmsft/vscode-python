@@ -42,6 +42,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly interpreterService: IInterpreterService;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
+    private readonly deferredExtensionCommands: [string, {}][] = [];
 
     private languageClient: LanguageClient | undefined;
     private readonly context: ExtensionContext;
@@ -63,6 +64,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 if (this.languageClient) {
                     await this.startupCompleted.promise;
                     this.languageClient.sendRequest('python/loadExtension', args);
+                } else {
+                    this.deferredExtensionCommands.push(['python/loadExtension', args]);
                 }
             }
         ));
@@ -137,6 +140,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.languageClient!.onReady()
             .then(() => {
                 this.startupCompleted.resolve();
+                this.sendDeferredExtensionCommands();
             })
             .catch(error => this.startupCompleted.reject(error));
 
@@ -229,5 +233,13 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 testEnvironment: isTestExecution()
             }
         };
+    }
+
+    private sendDeferredExtensionCommands() {
+        if (this.languageClient){
+            for (const cmd of this.deferredExtensionCommands) {
+                this.languageClient.sendRequest(cmd[0], cmd[1]);
+            }
+        }
     }
 }
