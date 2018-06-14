@@ -1,10 +1,12 @@
+import json
+
 import pytest
 
 from .. import npm
 
 
 def test_projects():
-    test_lock_data = {
+    json_data = {
         "dependencies": {
             "append-buffer": {
                 "version": "1.0.2",
@@ -43,7 +45,7 @@ def test_projects():
             },
         }
     }
-    packages = npm.projects(test_lock_data)
+    packages = npm.projects_from_data(json.dumps(json_data))
     assert len(packages) == 2
     assert "arch" in packages
     assert packages["arch"] == {
@@ -68,7 +70,7 @@ def test_package_filenames():
         "package/code/stuff.js",
         "i_do_not_know.txt",
     ]
-    package_filenames = npm.package_filenames(example)
+    package_filenames = npm._package_filenames(example)
     assert package_filenames == {
         "package.json",
         "index.js",
@@ -80,13 +82,26 @@ def test_package_filenames():
 
 def test_find_license():
     example = {"package.json", "index.js", "license", "readme.md", "code/stuff.js"}
-    assert "license" == npm.find_license(example)
+    assert "license" == npm._find_license(example)
     with pytest.raises(ValueError):
-        npm.find_license([])
+        npm._find_license([])
 
 
 def test_fetch_license():
     # A one-liner module equating to 1.5KB of data.
     tarball_url = "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz"
-    license = npm.fetch_license(tarball_url)
+    license = npm._fetch_license(tarball_url)
     assert "MIT" in license
+
+
+def test_fill_in_licenses():
+    example = {
+        "user-home": {
+            "name": "user-home",
+            "version": "2.0.0",
+            "url": "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz",
+        }
+    }
+    failures = npm.fill_in_licenses(example)
+    assert not failures
+    assert "license" in example["user-home"]

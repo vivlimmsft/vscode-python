@@ -1,11 +1,12 @@
 import io
+import json
 import pathlib
 import tarfile
 
 import requests
 
 
-def projects(package_data):
+def _projects(package_data):
     """Retrieve the list of projects from the package data.
 
     'package_data' is assumed to be from a 'package-lock.json' file. All
@@ -24,7 +25,13 @@ def projects(package_data):
     return packages
 
 
-def package_filenames(tarball_paths):
+def projects_from_data(raw_data):
+    """Create the requested projects from the data string provided."""
+    json_data = json.loads(raw_data)
+    return _projects(json_data)
+
+
+def _package_filenames(tarball_paths):
     """Transform the iterable of npm tarball paths to the files contained within the package."""
     paths = []
     for path in tarball_paths:
@@ -51,7 +58,7 @@ LICENSE_FILENAMES = frozenset(
 )
 
 
-def find_license(filenames):
+def _find_license(filenames):
     """Find the file name for the license file."""
     for filename in filenames:
         if filename.lower() in LICENSE_FILENAMES:
@@ -60,11 +67,25 @@ def find_license(filenames):
         raise ValueError("no license file found")
 
 
-def fetch_license(tarball_url):
+def _fetch_license(tarball_url):
     """Download and extract the license file."""
     url_request = requests.get(tarball_url)
     with tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content)) as tarball:
-        filenames = package_filenames(tarball.getnames())
-        license_filename = find_license(filenames)
+        filenames = _package_filenames(tarball.getnames())
+        license_filename = _find_license(filenames)
         with tarball.extractfile(f"package/{license_filename}") as file:
             return file.read().decode("utf-8")
+
+
+def fill_in_licenses(requested_projects):
+    """Add the missing licenses to requested_projects.
+
+    Any failures in the searching for licenses are returned.
+
+    """
+    # XXX Make concurrent
+    for name, details in requested_projects.items():
+        url = details["url"]
+        print(f"{name} {details['version']}: {url}")
+        details["license"] = _fetch_license(url)
+    return {}  # XXX Failures

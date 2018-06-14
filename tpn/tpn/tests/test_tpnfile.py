@@ -1,6 +1,6 @@
-import pytest
-
 import copy
+
+import pytest
 
 from .. import tpnfile
 
@@ -59,6 +59,23 @@ def test_parse_tpn():
         licenses["Python programming language"]
         == PROJECT_DATA["Python programming language"]
     )
+
+
+def test_sort():
+    cached_data = copy.deepcopy(PROJECT_DATA)
+    requested_data = copy.deepcopy(PROJECT_DATA)
+    for details in requested_data.values():
+        del details["license"]
+    cached_data["Python programming language"]["version"] = "1.5.2"
+    projects = tpnfile.sort(cached_data, requested_data)
+    assert not cached_data
+    assert len(requested_data) == 1
+    assert "Python programming language" in requested_data
+    assert requested_data["Python programming language"]["version"] == "3.6.5"
+    assert len(projects) == 1
+    assert "Arch" in projects
+    assert "license" in projects["Arch"]
+    assert projects["Arch"]["license"] == PROJECT_DATA["Arch"]["license"]
 
 
 def test_generate_tpn():

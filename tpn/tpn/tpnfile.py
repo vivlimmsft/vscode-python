@@ -19,6 +19,24 @@ def parse_tpn(text):
     return licenses
 
 
+def sort(cached_projects, requested_projects):
+    """Tease out the projects which have a valid cache entry.
+
+    Both cached_projects and requested_projects are mutated as appropriate when
+    relevant cached entries are found.
+
+    """
+    projects = {}
+    for name, details in list(requested_projects.items()):
+        if name in cached_projects:
+            cached_details = cached_projects[name]
+            del cached_projects[name]
+            if cached_details["version"] == details["version"]:
+                projects[name] = cached_details
+                del requested_projects[name]
+    return projects
+
+
 def generate_tpn(config, projects):
     """Create the TPN text."""
     parts = [config["metadata"]["header"]]

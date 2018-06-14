@@ -25,64 +25,50 @@ from . import npm
 # XXX Verbose mode to emit where a license was found, otherwise only worry about
 # errors.
 
-# XXX Cached projects from TPN
-# XXX Manually-entered project from configuration file
-# XXX Generalize so that supporting a new index is simply implementing a module:
-# XXX   Needed projects from index
-# XXX   If there's an entry in the configuration file, use it
-# XXX   Warn about stale entries for the index in the configuration file
-# XXX   If there's an entry from the cache, use it
-# XXX   Get license from index (and record any failure)
-# XXX   Warn about any failures
-# XXX Generate TPN (if no failures)
+
+def handle_index(module, raw_path, config_projects, cached_projects):
+    _, _, index_name = module.__name__.rpartition(".")
+    with open(raw_path, encoding="utf-8") as file:
+        raw_data = file.read()
+    requested_projects = module.projects_from_data(raw_data)
+    projects, stale = config.sort(index_name, config_projects, requested_projects)
+    for name, details in projects.items():
+        print(f"{name} {details['version']}: configuration file")
+    valid_cache_entries = tpnfile.sort(cached_projects, requested_projects)
+    for name, details in valid_cache_entries.items():
+        print(f"{name} {details['version']}: TPN cache")
+    projects.update(valid_cache_entries)
+    failures = module.fill_in_licenses(requested_projects)
+    projects.update(requested_projects)
+    return projects, stale, failures
 
 
 def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
-    config = toml.loads(config_path.read_text(encoding="utf-8"))
-    projects = config.get_projects(config)
+    config_data = toml.loads(config_path.read_text(encoding="utf-8"))
+    config_projects = config.get_projects(config_data)
+    projects = config.get_explicit_entries(config_projects)
     if tpn_path.exists():
-        known_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))
+        cached_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))
     else:
-        known_projects = {}
+        cached_projects = {}
     if npm_path:
-        with open(npm_path, encoding="utf-8") as file:
-            package_data = json.load(file)
-        npm_projects = npm.projects(package_data)
-        # XXX Factor out
-        for name, details in list(npm_projects.items()):
-            details_version = details["version"]
-            if name in projects:
-                projects_version = projects[name]["version"]
-                if details_version == projects_version:
-                    del npm_projects[name]
-                    print(name, details_version, ":", config_path)
-                else:
-                    del project[name]
-                    print(
-                        name,
-                        f"is outdated in {config_path}",
-                        f"({projects_version} != {details_version}",
-                    )
-            elif name in known_projects:
-                known_details = known_projects[name]
-                if details["version"] == known_details["version"]:
-                    projects[name] = known_details
-                    del npm_projects[name]
-                    print(name, details["version"], ":", tpn_path)
-        for name, details in npm_projects.items():
-            print(name, details["version"], ":", details["url"])
-            details["license"] = npm.fetch_license(details["url"])
-            projects[name] = details
-            # XXX ! fill_in_licenses() which could be made concurrent
-            # XXX ! warn if copyleft
+        npm_projects, stale, failures = handle_index(
+            npm, npm_path, config_projects, cached_projects
+        )
+        projects.update(npm_projects)
+        for name in stale:
+            print("STALE:", name)
+        # XXX Failures
     if pypi_path:
-        # XXX ! Repeat above for PyPI.
-        pass
-    # XXX Check for stale config entries
+        # XXX Implement
+        pypi_projects, stale, failures = handle_index(
+            pypi, pypi_path, config_projects, cached_projects
+        )
+        projects.update(pypi_projects)
     with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
-        file.write(tpnfile.generate_tpn(config, projects))
+        file.write(tpnfile.generate_tpn(config_data, projects))
 
 
 if __name__ == "__main__":

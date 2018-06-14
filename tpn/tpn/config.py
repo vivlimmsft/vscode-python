@@ -1,14 +1,6 @@
 import enum
 
 
-# XXX When __main__ is generalized, this will no longer be needed as the modules will be the
-# objects providing the index name (probably from ``__name__.rpartition(".")``)
-@enum.unique
-class Purpose(enum.enum):
-    manual = "manual"
-    npm = "npm"
-
-
 FIELDS = {"name", "version", "url", "purpose", "license"}
 
 
@@ -16,14 +8,28 @@ def get_projects(config):
     """Pull out projects as specified in a configuration file."""
     projects = {}
     for project in config["project"]:
-        if not all(key.value in project for key in Purpose):
-            raise KeyError(f"A key from {FIELDS!r} missing from {project!r}")
-        elif project["purpose"] not in PURPOSES:
-            raise ValueError(
-                f"{project['purpose']!r} is not a recognized purpose in {PURPOSES!r}"
+        if not all(key in project for key in FIELDS):
+            raise KeyError(
+                f"A key from {sorted(FIELDS)!r} is missing from {sorted(project.keys())!r}"
             )
         projects[project["name"]] = project
     return projects
+
+
+def get_explicit_entries(config_projects):
+    """Pull out and return the projects in the config that were explicitly entered.
+
+    The projects in the returned dict are deleted from config_projects.
+
+    """
+    explicit_projects = {
+        name: details
+        for name, details in config_projects.items()
+        if details["purpose"] == "explicit"
+    }
+    for project in explicit_projects:
+        del config_projects[project]
+    return explicit_projects
 
 
 def sort(purpose, config_projects, requested_projects):
@@ -38,21 +44,18 @@ def sort(purpose, config_projects, requested_projects):
     stale = {}
     config_subset = {
         project: details
-        for project, details in config_projects
-        if details["purpose"] == purpose.value
+        for project, details in config_projects.items()
+        if details["purpose"] == purpose
     }
-    for project, details in config_subset:
+    for name, details in config_subset.items():
         config_version = details["version"]
-        if project in requested_projects:
+        if name in requested_projects:
             requested_version = requested_projects[name]["version"]
             if config_version == requested_version:
                 projects[name] = details
-                del config_projects[name]
+                del requested_projects[name]
             else:
                 stale[name] = details
-        del config_projects[name]
+            del config_projects[name]
 
     return projects, stale
-
-
-# XXX Provide a way to get the manually-specified projects
