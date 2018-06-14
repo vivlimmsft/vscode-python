@@ -3,7 +3,7 @@
 Usage: tpn [--npm=<package-lock.json>] [--pypi=<requirements.txt>] --config=<TPN.toml> <tpn_path>
 
 Options:
-    --npm=<package.json>            Path to a package-lock.json for node.
+    --npm=<package.json>            Path to a package-lock.json for npm.
     --pypi=<requirements.txt>       Path to a requirements.txt file for pip.
 
 """
