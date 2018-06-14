@@ -18,6 +18,10 @@ from . import tpnfile
 from . import npm
 
 # XXX Support teams that have e.g. 501 NPM entries
+# (and think of both making CELA's life easier and also figuring out whether
+# there is a license file with an odd name; probably will want a custom object
+# which contains all the details necessary to help facilitate finding the license)
+
 # XXX Cached projects from TPN
 # XXX Manually-entered project from configuration file
 # XXX Generalize so that supporting a new index is simply implementing a module:
