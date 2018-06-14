@@ -1,6 +1,8 @@
 import enum
 
 
+# XXX When __main__ is generalized, this will no longer be needed as the modules will be the
+# objects providing the index name (probably from ``__name__.rpartition(".")``)
 @enum.unique
 class Purpose(enum.enum):
     manual = "manual"
@@ -51,3 +53,6 @@ def sort(purpose, config_projects, requested_projects):
         del config_projects[name]
 
     return projects, stale
+
+
+# XXX Provide a way to get the manually-specified projects
