@@ -22,6 +22,9 @@ from . import npm
 # there is a license file with an odd name; probably will want a custom object
 # which contains all the details necessary to help facilitate finding the license)
 
+# XXX Verbose mode to emit where a license was found, otherwise only worry about
+# errors.
+
 # XXX Cached projects from TPN
 # XXX Manually-entered project from configuration file
 # XXX Generalize so that supporting a new index is simply implementing a module:
