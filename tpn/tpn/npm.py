@@ -1,10 +1,10 @@
-from concurrent import futures
+import asyncio
 import io
 import json
 import pathlib
 import tarfile
 
-import requests
+import aiohttp
 
 
 def _projects(package_data):
@@ -68,19 +68,27 @@ def _find_license(filenames):
         raise ValueError(f"no license file found in {sorted(filenames)}")
 
 
-def _fetch_license(tarball_url):
+async def _fetch_license(tarball_url, session):
     """Download and extract the license file."""
     try:
-        url_request = requests.get(tarball_url)
-        with tarfile.open(
-            mode="r:gz", fileobj=io.BytesIO(url_request.content)
-        ) as tarball:
+        async with session.get(tarball_url) as response:
+            content = await response.read()
+        with tarfile.open(mode="r:gz", fileobj=io.BytesIO(content)) as tarball:
             filenames = _top_level_package_filenames(tarball.getnames())
             license_filename = _find_license(filenames)
             with tarball.extractfile(f"package/{license_filename}") as file:
                 return file.read().decode("utf-8")
     except Exception as exc:
         return exc
+
+
+async def _trampoline(urls):
+    """Fetch URLs with a client session."""
+    tasks = []
+    async with aiohttp.ClientSession() as session:
+        for url in urls:
+            tasks.append(asyncio.ensure_future(_fetch_license(url, session)))
+        return await asyncio.gather(*tasks)
 
 
 def fill_in_licenses(requested_projects):
@@ -92,15 +100,13 @@ def fill_in_licenses(requested_projects):
     failures = {}
     names = list(requested_projects.keys())
     urls = (requested_projects[name]["url"] for name in names)
-    # Tried with asyncio, but the overhead is too high to be faster for
-    # e.g. 100 requests.
-    with futures.ThreadPoolExecutor() as executor:
-        licenses = list(executor.map(_fetch_license, urls))
-        for name, license_or_exc in zip(names, licenses):
-            details = requested_projects[name]
-            if isinstance(license_or_exc, Exception):
-                details["error"] = license_or_exc
-                failures[name] = details
-            else:
-                details["license"] = license_or_exc
+    loop = asyncio.get_event_loop()
+    licenses = loop.run_until_complete(asyncio.ensure_future(_trampoline(urls)))
+    for name, license_or_exc in zip(names, licenses):
+        details = requested_projects[name]
+        if isinstance(license_or_exc, Exception):
+            details["error"] = license_or_exc
+            failures[name] = details
+        else:
+            details["license"] = license_or_exc
     return failures
