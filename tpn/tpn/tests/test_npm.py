@@ -81,13 +81,6 @@ def test_find_license():
         npm._find_license([])
 
 
-def test_fetch_license():
-    # A one-liner module equating to 1.5KB of data.
-    tarball_url = "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz"
-    license = npm._fetch_license(tarball_url)
-    assert "MIT" in license
-
-
 def test_fill_in_licenses():
     example = {
         "user-home": {

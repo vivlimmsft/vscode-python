@@ -65,17 +65,22 @@ def _find_license(filenames):
         if filename.lower() in LICENSE_FILENAMES:
             return filename
     else:
-        raise ValueError("no license file found")
+        raise ValueError(f"no license file found in {sorted(filenames)}")
 
 
 def _fetch_license(tarball_url):
     """Download and extract the license file."""
-    url_request = requests.get(tarball_url)
-    with tarfile.open(mode="r:gz", fileobj=io.BytesIO(url_request.content)) as tarball:
-        filenames = _top_level_package_filenames(tarball.getnames())
-        license_filename = _find_license(filenames)
-        with tarball.extractfile(f"package/{license_filename}") as file:
-            return file.read().decode("utf-8")
+    try:
+        url_request = requests.get(tarball_url)
+        with tarfile.open(
+            mode="r:gz", fileobj=io.BytesIO(url_request.content)
+        ) as tarball:
+            filenames = _top_level_package_filenames(tarball.getnames())
+            license_filename = _find_license(filenames)
+            with tarball.extractfile(f"package/{license_filename}") as file:
+                return file.read().decode("utf-8")
+    except Exception as exc:
+        return exc
 
 
 def fill_in_licenses(requested_projects):
@@ -84,11 +89,18 @@ def fill_in_licenses(requested_projects):
     Any failures in the searching for licenses are returned.
 
     """
+    failures = {}
     names = list(requested_projects.keys())
     urls = (requested_projects[name]["url"] for name in names)
-    licenses = futures.ThreadPoolExecutor.map(_fetch_license, urls)
-    for name, license in zip(names, urls):
-        details = requested_projects[name]
-        details["license"] = license
-        print(f"{name} {details['version']}: {details['url']}")
-    return {}  # XXX Failures
+    # Tried with asyncio, but the overhead is too high to be faster for
+    # e.g. 100 requests.
+    with futures.ThreadPoolExecutor() as executor:
+        licenses = list(executor.map(_fetch_license, urls))
+        for name, license_or_exc in zip(names, licenses):
+            details = requested_projects[name]
+            if isinstance(license_or_exc, Exception):
+                details["error"] = license_or_exc
+                failures[name] = details
+            else:
+                details["license"] = license_or_exc
+    return failures
