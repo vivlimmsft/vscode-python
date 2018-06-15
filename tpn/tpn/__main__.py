@@ -9,6 +9,7 @@ Options:
 """
 import json
 import pathlib
+import sys
 
 import docopt
 import pytoml as toml
@@ -59,8 +60,13 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
         )
         projects.update(npm_projects)
         for name in stale:
-            print("STALE:", name)
-        # XXX Failures
+            print("STALE in config file:", name)
+        if failures:
+            for name, details in failures.items():
+                print(
+                    f"FAILED to find license for {name} {details['version']} @ {details['url']}: {details['error']}"
+                )
+            sys.exit(1)
     if pypi_path:
         # XXX Implement
         pypi_projects, stale, failures = handle_index(
