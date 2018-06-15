@@ -18,14 +18,6 @@ from . import config
 from . import tpnfile
 from . import npm
 
-# XXX Support teams that have e.g. 501 NPM entries
-# (and think of both making CELA's life easier and also figuring out whether
-# there is a license file with an odd name; probably will want a custom object
-# which contains all the details necessary to help facilitate finding the license)
-
-# XXX Verbose mode to emit where a license was found, otherwise only worry about
-# errors.
-
 
 def handle_index(module, raw_path, config_projects, cached_projects):
     _, _, index_name = module.__name__.rpartition(".")
