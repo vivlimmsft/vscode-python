@@ -54,8 +54,8 @@ def sort(purpose, config_projects, requested_projects):
             if config_version == requested_version:
                 projects[name] = details
                 del requested_projects[name]
-            else:
-                stale[name] = details
-            del config_projects[name]
+                continue
+        stale[name] = details
+        del config_projects[name]
 
     return projects, stale

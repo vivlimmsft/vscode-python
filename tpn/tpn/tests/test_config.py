@@ -62,7 +62,7 @@ def test_sort_relevant(example_data):
     assert relevant == expected
 
 
-def test_sort_stale(example_data):
+def test_sort_version_stale(example_data):
     npm_data = {"Arch": {"version": "2.0.0"}}
     relevant, stale = config.sort("npm", example_data, npm_data)
     assert not relevant
@@ -70,6 +70,15 @@ def test_sort_stale(example_data):
     assert stale["Arch"]["version"] == "1.0.3"
     assert "Arch" in npm_data
     assert npm_data["Arch"]["version"] == "2.0.0"
+
+
+def test_sort_project_stale(example_data):
+    npm_data = {"Arch2": {"version": "2.0.0"}}
+    relevant, stale = config.sort("npm", example_data, npm_data)
+    assert not relevant
+    assert "Arch" in stale
+    assert stale["Arch"]["version"] == "1.0.3"
+    assert "Arch2" in npm_data
 
 
 def test_sort_no_longer_relevant(example_data):
