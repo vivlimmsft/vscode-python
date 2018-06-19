@@ -55,17 +55,13 @@ def sort(purpose, config_projects, requested_projects):
         for project, details in config_projects.items()
         if details["purpose"] == purpose
     }
-    print("checking", config_subset)
     for name, details in config_subset.items():
         del config_projects[name]
         config_version = details["version"]
-        print("checking", name)
         match = False
         if name in requested_projects:
-            print(name, "matches")
             requested_version = requested_projects[name]["version"]
             if config_version == requested_version:
-                print(config_version, "matches")
                 projects[name] = details
                 del requested_projects[name]
                 match = True
