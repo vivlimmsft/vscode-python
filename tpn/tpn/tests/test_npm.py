@@ -81,7 +81,8 @@ def test_find_license():
         npm._find_license([])
 
 
-def test_fill_in_licenses():
+@pytest.mark.asyncio
+async def test_fill_in_licenses():
     example = {
         "user-home": {
             "name": "user-home",
@@ -89,6 +90,6 @@ def test_fill_in_licenses():
             "url": "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz",
         }
     }
-    failures = npm.fill_in_licenses(example)
+    failures = await npm.fill_in_licenses(example)
     assert not failures
     assert "license" in example["user-home"]

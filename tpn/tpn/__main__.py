@@ -7,6 +7,7 @@ Options:
     --pypi=<requirements.txt>       Path to a requirements.txt file for pip.
 
 """
+import asyncio
 import json
 import pathlib
 import sys
@@ -19,7 +20,7 @@ from . import tpnfile
 from . import npm
 
 
-def handle_index(module, raw_path, config_projects, cached_projects):
+async def handle_index(module, raw_path, config_projects, cached_projects):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
         raw_data = file.read()
@@ -31,7 +32,7 @@ def handle_index(module, raw_path, config_projects, cached_projects):
     for name, details in valid_cache_entries.items():
         print(f"{name} {details['version']}: TPN cache")
     projects.update(valid_cache_entries)
-    failures = module.fill_in_licenses(requested_projects)
+    failures = await module.fill_in_licenses(requested_projects)
     projects.update(requested_projects)
     return projects, stale, failures
 
@@ -46,25 +47,27 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
         cached_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))
     else:
         cached_projects = {}
+    tasks = []
     if npm_path:
-        npm_projects, stale, failures = handle_index(
-            npm, npm_path, config_projects, cached_projects
-        )
-        projects.update(npm_projects)
-        for name in stale:
-            print("STALE in config file:", name)
-        if failures:
-            for name, details in failures.items():
-                print(
-                    f"FAILED to find license for {name} {details['version']} @ {details['url']}: {details['error']}"
-                )
-            sys.exit(1)
+        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects))
     if pypi_path:
-        # XXX Implement
-        pypi_projects, stale, failures = handle_index(
-            pypi, pypi_path, config_projects, cached_projects
-        )
-        projects.update(pypi_projects)
+        tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects))
+    loop = asyncio.get_event_loop()
+    gathered = loop.run_until_complete(asyncio.gather(*tasks))
+    stale = {}
+    failures = {}
+    for found_projects, found_stale, found_failures in gathered:
+        projects.update(found_projects)
+        stale.update(found_stale)
+        failures.update(found_failures)
+    for name in stale:
+        print("STALE in config file:", name)
+    if failures:
+        for name, details in failures.items():
+            print(
+                f"FAILED to find license for {name} {details['version']} @ {details['url']}: {details['error']}"
+            )
+        sys.exit(1)
     with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
         file.write(tpnfile.generate_tpn(config_data, projects))
 

@@ -68,7 +68,7 @@ def _find_license(filenames):
         raise ValueError(f"no license file found in {sorted(filenames)}")
 
 
-async def _fetch_license(tarball_url, session):
+async def _fetch_license(session, tarball_url):
     """Download and extract the license file."""
     try:
         async with session.get(tarball_url) as response:
@@ -82,16 +82,7 @@ async def _fetch_license(tarball_url, session):
         return exc
 
 
-async def _trampoline(urls):
-    """Fetch URLs with a client session."""
-    tasks = []
-    async with aiohttp.ClientSession() as session:
-        for url in urls:
-            tasks.append(asyncio.ensure_future(_fetch_license(url, session)))
-        return await asyncio.gather(*tasks)
-
-
-def fill_in_licenses(requested_projects):
+async def fill_in_licenses(requested_projects):
     """Add the missing licenses to requested_projects.
 
     Any failures in the searching for licenses are returned.
@@ -100,13 +91,14 @@ def fill_in_licenses(requested_projects):
     failures = {}
     names = list(requested_projects.keys())
     urls = (requested_projects[name]["url"] for name in names)
-    loop = asyncio.get_event_loop()
-    licenses = loop.run_until_complete(asyncio.ensure_future(_trampoline(urls)))
-    for name, license_or_exc in zip(names, licenses):
-        details = requested_projects[name]
-        if isinstance(license_or_exc, Exception):
-            details["error"] = license_or_exc
-            failures[name] = details
-        else:
-            details["license"] = license_or_exc
+    async with aiohttp.ClientSession() as session:
+        tasks = (_fetch_license(session, url) for url in urls)
+        for name, license_or_exc in zip(names, await asyncio.gather(*tasks)):
+            details = requested_projects[name]
+            license_or_exc = await _fetch_license(session, details["url"])
+            if isinstance(license_or_exc, Exception):
+                details["error"] = license_or_exc
+                failures[name] = details
+            else:
+                details["license"] = license_or_exc
     return failures
