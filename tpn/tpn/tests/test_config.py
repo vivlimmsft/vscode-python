@@ -84,5 +84,4 @@ def test_sort_project_stale(example_data):
 def test_sort_no_longer_relevant(example_data):
     relevant, stale = config.sort("npm", example_data, {})
     assert not relevant
-    assert not stale
-    assert "Arch" in example_data
+    assert "Arch" in stale

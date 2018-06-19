@@ -37,7 +37,15 @@ def sort(purpose, config_projects, requested_projects):
 
     The config_projects mapping will have all 'purpose' projects deleted from it
     in the end. The requested_projects mapping will have any project which was
-    appropriately found in config_projects deleted.
+    appropriately found in config_projects deleted. In the end:
+
+    - config_projects will have no projects related to 'purpose' left.
+    - requested_projects will have projects for which no match in config_projects
+      was found.
+    - The first returned item will be all projects which had a match in both
+      config_projects and requested_projects for 'purpose'
+    - The second item returned will be all projects which match 'purpose' that
+      were not placed into the first returned item
 
     """
     projects = {}
@@ -47,15 +55,21 @@ def sort(purpose, config_projects, requested_projects):
         for project, details in config_projects.items()
         if details["purpose"] == purpose
     }
+    print("checking", config_subset)
     for name, details in config_subset.items():
+        del config_projects[name]
         config_version = details["version"]
+        print("checking", name)
+        match = False
         if name in requested_projects:
+            print(name, "matches")
             requested_version = requested_projects[name]["version"]
             if config_version == requested_version:
+                print(config_version, "matches")
                 projects[name] = details
                 del requested_projects[name]
-                continue
-        stale[name] = details
-        del config_projects[name]
+                match = True
+        if not match:
+            stale[name] = details
 
     return projects, stale
