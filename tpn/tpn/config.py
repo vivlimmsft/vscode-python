@@ -69,3 +69,14 @@ def sort(purpose, config_projects, requested_projects):
             stale[name] = details
 
     return projects, stale
+
+def get_skip_projects(config):
+    """Get projects that should be skipped."""
+    skip_projects = {}
+    for project in config["skip_project"]:
+        if not "name" in project:
+            raise KeyError(
+                f"The 'name' field is missing on {project}"
+            )
+        skip_projects[project["name"]] = skip_projects
+    return skip_projects

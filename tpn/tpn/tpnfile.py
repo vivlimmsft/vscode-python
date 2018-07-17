@@ -52,6 +52,9 @@ def generate_tpn(config, projects):
     licenses = []
     for name in project_names:
         details = projects[name]
-        licenses.append(TPN_SECTION_TEMPLATE.format(**details))
+        if license in details:
+            licenses.append(TPN_SECTION_TEMPLATE.format(**details))
+        else:
+            print("Couldn't write notice for package ", name)
     parts.append("\n\n".join(licenses))
     return "\n\n\n".join(parts) + "\n"

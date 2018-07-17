@@ -20,12 +20,14 @@ from . import tpnfile
 from . import npm
 
 
-async def handle_index(module, raw_path, config_projects, cached_projects):
+async def handle_index(module, raw_path, config_projects, cached_projects, skip_projects):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
         raw_data = file.read()
     # XXX Make async.
     requested_projects = module.projects_from_data(raw_data)
+    # Remove skip_projects
+    requested_projects = {k:v for k,v in requested_projects.items() if k not in skip_projects.keys()}
     projects, stale = config.sort(index_name, config_projects, requested_projects)
     for name, details in projects.items():
         print(f"{name} {details['version']}: configuration file")
@@ -43,6 +45,7 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     config_path = pathlib.Path(config_path)
     config_data = toml.loads(config_path.read_text(encoding="utf-8"))
     config_projects = config.get_projects(config_data)
+    config_skip_projects = config.get_skip_projects(config_data)
     projects = config.get_explicit_entries(config_projects)
     if tpn_path.exists():
         cached_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))
@@ -50,9 +53,9 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
         cached_projects = {}
     tasks = []
     if npm_path:
-        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects))
+        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects, config_skip_projects))
     if pypi_path:
-        tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects))
+        tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects, config_skip_projects))
     loop = asyncio.get_event_loop()
     gathered = loop.run_until_complete(asyncio.gather(*tasks))
     stale = {}
@@ -68,7 +71,6 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
             print(
                 f"FAILED to find license for {name} {details['version']} @ {details['url']}: {details['error']}"
             )
-        sys.exit(1)
     with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
         file.write(tpnfile.generate_tpn(config_data, projects))
 
