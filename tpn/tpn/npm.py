@@ -74,11 +74,15 @@ async def _fetch_license(session, tarball_url):
     try:
         async with session.get(tarball_url) as response:
             content = await response.read()
-        with tarfile.open(mode="r:gz", fileobj=io.BytesIO(content)) as tarball:
-            filenames = _top_level_package_filenames(tarball.getnames())
-            license_filename = _find_license(filenames)
-            with tarball.extractfile(f"package/{license_filename}") as file:
-                return file.read().decode("utf-8")
+        try:
+            with tarfile.open(mode="r:gz", fileobj=io.BytesIO(content)) as tarball:
+                filenames = _top_level_package_filenames(tarball.getnames())
+                license_filename = _find_license(filenames)
+                with tarball.extractfile(f"package/{license_filename}") as file:
+                    return file.read().decode("utf-8")
+        except tarfile.ReadError:
+            content_string = content.decode("utf-8")
+            print(f"Tried to download gzip at {tarball_url}, got this instead: {content_string}")
     except Exception as exc:
         return exc
 
