@@ -7,6 +7,8 @@ FIELDS = {"name", "version", "url", "purpose", "license"}
 def get_projects(config):
     """Pull out projects as specified in a configuration file."""
     projects = {}
+    if "project" not in config:
+        return projects
     for project in config["project"]:
         if not all(key in project for key in FIELDS):
             raise KeyError(
@@ -73,6 +75,8 @@ def sort(purpose, config_projects, requested_projects):
 def get_skip_projects(config):
     """Get projects that should be skipped."""
     skip_projects = {}
+    if "skip_project" not in config:
+        return skip_projects
     for project in config["skip_project"]:
         if not "name" in project:
             raise KeyError(
